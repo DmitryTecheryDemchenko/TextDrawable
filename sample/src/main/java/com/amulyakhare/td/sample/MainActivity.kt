@@ -1,119 +1,92 @@
-package com.amulyakhare.td.sample;
+package com.amulyakhare.td.sample
 
-import android.content.Intent;
-import android.graphics.drawable.AnimationDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.*;
+import android.app.Activity
+import android.content.Intent
+import android.graphics.drawable.AnimationDrawable
+import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import android.widget.*
+import android.widget.AdapterView.OnItemClickListener
+import androidx.core.content.res.ResourcesCompat
+import com.amulyakhare.td.R
+import com.amulyakhare.td.sample.sample.DataItem
+import com.amulyakhare.td.sample.sample.DataSource
 
-import com.amulyakhare.td.R;
-import com.amulyakhare.td.sample.sample.DataItem;
-import com.amulyakhare.td.sample.sample.DataSource;
-
-public class MainActivity extends ActionBarActivity implements AdapterView.OnItemClickListener {
-
-    public static final String TYPE = "TYPE";
-    private DataSource mDataSource;
-    private ListView mListView;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        mListView = (ListView) findViewById(R.id.listView);
-        mDataSource = new DataSource(this);
-        mListView.setAdapter(new SampleAdapter());
-        mListView.setOnItemClickListener(this);
+class MainActivity : Activity(), OnItemClickListener {
+    private lateinit var mDataSource: DataSource
+    private lateinit var mListView: ListView
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        mListView = findViewById(R.id.listView)
+        mDataSource = DataSource(this)
+        mListView.adapter = SampleAdapter()
+        mListView.onItemClickListener = this
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        DataItem item = (DataItem) mListView.getItemAtPosition(position);
+    override fun onItemClick(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
+        val item = mListView.getItemAtPosition(position) as DataItem
 
         // if navigation is supported, open the next activity
-        if (item.getNavigationInfo() != DataSource.NO_NAVIGATION) {
-            Intent intent = new Intent(this, ListActivity.class);
-            intent.putExtra(TYPE, item.getNavigationInfo());
-            startActivity(intent);
+        if (item.navigationInfo != DataSource.NO_NAVIGATION) {
+            val intent = Intent(this, ListActivity::class.java)
+            intent.putExtra(TYPE, item.navigationInfo)
+            startActivity(intent)
         }
     }
 
-    private class SampleAdapter extends BaseAdapter {
-
-        @Override
-        public int getCount() {
-            return mDataSource.getCount();
+    private inner class SampleAdapter : BaseAdapter() {
+        override fun getCount(): Int {
+            return mDataSource.count
         }
 
-        @Override
-        public DataItem getItem(int position) {
-            return mDataSource.getItem(position);
+        override fun getItem(position: Int): DataItem {
+            return mDataSource.getItem(position)
         }
 
-        @Override
-        public long getItemId(int position) {
-            return position;
+        override fun getItemId(position: Int): Long {
+            return position.toLong()
         }
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ViewHolder holder;
-            if (convertView == null) {
-                convertView = View.inflate(MainActivity.this, R.layout.list_item_layout, null);
-                holder = new ViewHolder(convertView);
-                convertView.setTag(holder);
-            } else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-
-            DataItem item = getItem(position);
-
-            final Drawable drawable = item.getDrawable();
-            holder.imageView.setImageDrawable(drawable);
-            holder.textView.setText(item.getLabel());
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val holder: ViewHolder = (convertView?.tag as? ViewHolder) ?: ViewHolder(
+                    view = View.inflate(this@MainActivity, R.layout.list_item_layout, null),
+            )
+            holder.view.tag = holder
+            val item = getItem(position)
+            val drawable = item.drawable
+            holder.imageView.setImageDrawable(drawable)
+            holder.textView.text = item.label
 
             // if navigation is supported, show the ">" navigation icon
-            if (item.getNavigationInfo() != DataSource.NO_NAVIGATION) {
-                holder.textView.setCompoundDrawablesWithIntrinsicBounds(null,
-                        null,
-                        getResources().getDrawable(R.drawable.ic_action_next_item),
-                        null);
-            }
-            else {
-                holder.textView.setCompoundDrawablesWithIntrinsicBounds(null,
-                        null,
-                        null,
-                        null);
-            }
+
+            holder.textView.setCompoundDrawablesWithIntrinsicBounds(
+                    null,
+                    null,
+                    if (item.navigationInfo != DataSource.NO_NAVIGATION) ResourcesCompat.getDrawable(resources, R.drawable.ic_action_next_item, theme)
+                    else null,
+                    null,
+            )
 
             // fix for animation not playing for some below 4.4 devices
-            if (drawable instanceof AnimationDrawable) {
-                holder.imageView.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        ((AnimationDrawable) drawable).stop();
-                        ((AnimationDrawable) drawable).start();
-                    }
-                });
+            if (drawable is AnimationDrawable) {
+                holder.imageView.post {
+                    drawable.stop()
+                    drawable.start()
+                }
             }
-
-            return convertView;
+            return holder.view
         }
     }
 
-    private static class ViewHolder {
+    private class ViewHolder(val view: View) {
+        val imageView: ImageView = view.findViewById(R.id.imageView)
+        val textView: TextView = view.findViewById(R.id.textView)
 
-        private ImageView imageView;
+    }
 
-        private TextView textView;
-
-        private ViewHolder(View view) {
-            imageView = (ImageView) view.findViewById(R.id.imageView);
-            textView = (TextView) view.findViewById(R.id.textView);
-        }
+    companion object {
+        const val TYPE = "TYPE"
     }
 }

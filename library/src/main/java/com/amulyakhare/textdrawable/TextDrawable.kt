@@ -1,316 +1,129 @@
-package com.amulyakhare.textdrawable;
+package com.amulyakhare.textdrawable
 
-import android.graphics.*;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
-import android.graphics.drawable.shapes.RectShape;
-import android.graphics.drawable.shapes.RoundRectShape;
+import android.graphics.*
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.RectShape
+import com.amulyakhare.textdrawable.TextDrawable
+import android.graphics.drawable.shapes.OvalShape
+import android.graphics.drawable.shapes.RoundRectShape
+import java.util.*
 
 /**
  * @author amulya
  * @datetime 14 Oct 2014, 3:53 PM
  */
-public class TextDrawable extends ShapeDrawable {
+class TextDrawable internal constructor(
+        private val state: TextDrawableState,
+) : ShapeDrawable(state.shape) {
 
-    private final Paint textPaint;
-    private final Paint borderPaint;
-    private static final float SHADE_FACTOR = 0.9f;
-    private final String text;
-    private final int color;
-    private final RectShape shape;
-    private final int height;
-    private final int width;
-    private final int fontSize;
-    private final float radius;
-    private final int borderThickness;
+    private val textPaint: Paint by lazy(LazyThreadSafetyMode.NONE) { state.textPaint }
+    private val borderPaint: Paint by lazy(LazyThreadSafetyMode.NONE) { state.borderPaint }
+    private val text: String by lazy(LazyThreadSafetyMode.NONE) { state.text }
+    private val color: Int by lazy(LazyThreadSafetyMode.NONE) { state.color }
+    private val shape: RectShape by lazy(LazyThreadSafetyMode.NONE) { state.shape }
+    private val height: Int by lazy(LazyThreadSafetyMode.NONE) { state.height }
+    private val width: Int by lazy(LazyThreadSafetyMode.NONE) { state.width }
+    private val fontSize: Int by lazy(LazyThreadSafetyMode.NONE) { state.fontSize }
+    private val radius: Float by lazy(LazyThreadSafetyMode.NONE) { state.radius }
+    private val borderThickness: Int by lazy(LazyThreadSafetyMode.NONE) { state.borderThickness }
 
-    private TextDrawable(Builder builder) {
-        super(builder.shape);
-
-        // shape properties
-        shape = builder.shape;
-        height = builder.height;
-        width = builder.width;
-        radius = builder.radius;
-
-        // text and color
-        text = builder.toUpperCase ? builder.text.toUpperCase() : builder.text;
-        color = builder.color;
-
-        // text paint settings
-        fontSize = builder.fontSize;
-        textPaint = new Paint();
-        textPaint.setColor(builder.textColor);
-        textPaint.setAntiAlias(true);
-        textPaint.setFakeBoldText(builder.isBold);
-        textPaint.setStyle(Paint.Style.FILL);
-        textPaint.setTypeface(builder.font);
-        textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setStrokeWidth(builder.borderThickness);
-
-        // border paint settings
-        borderThickness = builder.borderThickness;
-        borderPaint = new Paint();
-        borderPaint.setColor(getDarkerShade(color));
-        borderPaint.setStyle(Paint.Style.STROKE);
-        borderPaint.setStrokeWidth(borderThickness);
-
-        // drawable paint color
-        Paint paint = getPaint();
-        paint.setColor(color);
-
+    companion object {
+        @JvmStatic
+        fun builder(): IShapeBuilder {
+            return Builder()
+        }
     }
 
-    private int getDarkerShade(int color) {
-        return Color.rgb((int)(SHADE_FACTOR * Color.red(color)),
-                (int)(SHADE_FACTOR * Color.green(color)),
-                (int)(SHADE_FACTOR * Color.blue(color)));
+    init {
+        paint.color = color
     }
 
-    @Override
-    public void draw(Canvas canvas) {
-        super.draw(canvas);
-        Rect r = getBounds();
+    override fun draw(canvas: Canvas) {
+        super.draw(canvas)
+        val r = bounds
 
 
         // draw border
         if (borderThickness > 0) {
-            drawBorder(canvas);
+            drawBorder(canvas)
         }
-
-        int count = canvas.save();
-        canvas.translate(r.left, r.top);
+        val count = canvas.save()
+        canvas.translate(r.left.toFloat(), r.top.toFloat())
 
         // draw text
-        int width = this.width < 0 ? r.width() : this.width;
-        int height = this.height < 0 ? r.height() : this.height;
-        int fontSize = this.fontSize < 0 ? (Math.min(width, height) / 2) : this.fontSize;
-        textPaint.setTextSize(fontSize);
-        canvas.drawText(text, width / 2, height / 2 - ((textPaint.descent() + textPaint.ascent()) / 2), textPaint);
-
-        canvas.restoreToCount(count);
-
+        val width = if (width < 0) r.width() else width
+        val height = if (height < 0) r.height() else height
+        val fontSize = if (fontSize < 0) Math.min(width, height) / 2 else fontSize
+        textPaint.textSize = fontSize.toFloat()
+        canvas.drawText(text, (width / 2).toFloat(), height / 2 - (textPaint.descent() + textPaint.ascent()) / 2, textPaint)
+        canvas.restoreToCount(count)
     }
 
-    private void drawBorder(Canvas canvas) {
-        RectF rect = new RectF(getBounds());
-        rect.inset(borderThickness/2, borderThickness/2);
-
-        if (shape instanceof OvalShape) {
-            canvas.drawOval(rect, borderPaint);
-        }
-        else if (shape instanceof RoundRectShape) {
-            canvas.drawRoundRect(rect, radius, radius, borderPaint);
-        }
-        else {
-            canvas.drawRect(rect, borderPaint);
+    private fun drawBorder(canvas: Canvas) {
+        val rect = RectF(bounds)
+        rect.inset((borderThickness / 2).toFloat(), (borderThickness / 2).toFloat())
+        if (shape is OvalShape) {
+            canvas.drawOval(rect, borderPaint)
+        } else if (shape is RoundRectShape) {
+            canvas.drawRoundRect(rect, radius, radius, borderPaint)
+        } else {
+            canvas.drawRect(rect, borderPaint)
         }
     }
 
-    @Override
-    public void setAlpha(int alpha) {
-        textPaint.setAlpha(alpha);
+    override fun setAlpha(alpha: Int) {
+        textPaint.alpha = alpha
     }
 
-    @Override
-    public void setColorFilter(ColorFilter cf) {
-        textPaint.setColorFilter(cf);
+    override fun setColorFilter(cf: ColorFilter?) {
+        textPaint.colorFilter = cf
     }
 
-    @Override
-    public int getOpacity() {
-        return PixelFormat.TRANSLUCENT;
+    @Deprecated("Not used in drawable optimization")
+    override fun getOpacity(): Int {
+        return PixelFormat.TRANSLUCENT
     }
 
-    @Override
-    public int getIntrinsicWidth() {
-        return width;
+    override fun getIntrinsicWidth(): Int {
+        return width
     }
 
-    @Override
-    public int getIntrinsicHeight() {
-        return height;
+    override fun getIntrinsicHeight(): Int {
+        return height
     }
 
-    public static IShapeBuilder builder() {
-        return new Builder();
-    }
-
-    public static class Builder implements IConfigBuilder, IShapeBuilder, IBuilder {
-
-        private String text;
-
-        private int color;
-
-        private int borderThickness;
-
-        private int width;
-
-        private int height;
-
-        private Typeface font;
-
-        private RectShape shape;
-
-        public int textColor;
-
-        private int fontSize;
-
-        private boolean isBold;
-
-        private boolean toUpperCase;
-
-        public float radius;
-
-        private Builder() {
-            text = "";
-            color = Color.GRAY;
-            textColor = Color.WHITE;
-            borderThickness = 0;
-            width = -1;
-            height = -1;
-            shape = new RectShape();
-            font = Typeface.create("sans-serif-light", Typeface.NORMAL);
-            fontSize = -1;
-            isBold = false;
-            toUpperCase = false;
-        }
-
-        public IConfigBuilder width(int width) {
-            this.width = width;
-            return this;
-        }
-
-        public IConfigBuilder height(int height) {
-            this.height = height;
-            return this;
-        }
-
-        public IConfigBuilder textColor(int color) {
-            this.textColor = color;
-            return this;
-        }
-
-        public IConfigBuilder withBorder(int thickness) {
-            this.borderThickness = thickness;
-            return this;
-        }
-
-        public IConfigBuilder useFont(Typeface font) {
-            this.font = font;
-            return this;
-        }
-
-        public IConfigBuilder fontSize(int size) {
-            this.fontSize = size;
-            return this;
-        }
-
-        public IConfigBuilder bold() {
-            this.isBold = true;
-            return this;
-        }
-
-        public IConfigBuilder toUpperCase() {
-            this.toUpperCase = true;
-            return this;
-        }
-
-        @Override
-        public IConfigBuilder beginConfig() {
-            return this;
-        }
-
-        @Override
-        public IShapeBuilder endConfig() {
-            return this;
-        }
-
-        @Override
-        public IBuilder rect() {
-            this.shape = new RectShape();
-            return this;
-        }
-
-        @Override
-        public IBuilder round() {
-            this.shape = new OvalShape();
-            return this;
-        }
-
-        @Override
-        public IBuilder roundRect(int radius) {
-            this.radius = radius;
-            float[] radii = {radius, radius, radius, radius, radius, radius, radius, radius};
-            this.shape = new RoundRectShape(radii, null, null);
-            return this;
-        }
-
-        @Override
-        public TextDrawable buildRect(String text, int color) {
-            rect();
-            return build(text, color);
-        }
-
-        @Override
-        public TextDrawable buildRoundRect(String text, int color, int radius) {
-            roundRect(radius);
-            return build(text, color);
-        }
-
-        @Override
-        public TextDrawable buildRound(String text, int color) {
-            round();
-            return build(text, color);
-        }
-
-        @Override
-        public TextDrawable build(String text, int color) {
-            this.color = color;
-            this.text = text;
-            return new TextDrawable(this);
+    override fun getConstantState(): ConstantState? {
+        return state.apply {
+            changingConfigurationMask = this@TextDrawable.changingConfigurations
         }
     }
 
-    public interface IConfigBuilder {
-        public IConfigBuilder width(int width);
+    // BUILDERS
 
-        public IConfigBuilder height(int height);
 
-        public IConfigBuilder textColor(int color);
-
-        public IConfigBuilder withBorder(int thickness);
-
-        public IConfigBuilder useFont(Typeface font);
-
-        public IConfigBuilder fontSize(int size);
-
-        public IConfigBuilder bold();
-
-        public IConfigBuilder toUpperCase();
-
-        public IShapeBuilder endConfig();
+    interface IConfigBuilder {
+        fun width(width: Int): IConfigBuilder
+        fun height(height: Int): IConfigBuilder
+        fun textColor(color: Int): IConfigBuilder
+        fun withBorder(thickness: Int): IConfigBuilder
+        fun useFont(font: Typeface): IConfigBuilder
+        fun fontSize(size: Int): IConfigBuilder
+        fun bold(): IConfigBuilder
+        fun toUpperCase(): IConfigBuilder
+        fun endConfig(): IShapeBuilder
     }
 
-    public static interface IBuilder {
-
-        public TextDrawable build(String text, int color);
+    interface IBuilder {
+        fun build(text: String, color: Int): TextDrawable
     }
 
-    public static interface IShapeBuilder {
-
-        public IConfigBuilder beginConfig();
-
-        public IBuilder rect();
-
-        public IBuilder round();
-
-        public IBuilder roundRect(int radius);
-
-        public TextDrawable buildRect(String text, int color);
-
-        public TextDrawable buildRoundRect(String text, int color, int radius);
-
-        public TextDrawable buildRound(String text, int color);
+    interface IShapeBuilder {
+        fun beginConfig(): IConfigBuilder
+        fun rect(): IBuilder
+        fun round(): IBuilder
+        fun roundRect(radius: Int): IBuilder
+        fun buildRect(text: String, color: Int): TextDrawable
+        fun buildRoundRect(text: String, color: Int, radius: Int): TextDrawable
+        fun buildRound(text: String, color: Int): TextDrawable
     }
 }

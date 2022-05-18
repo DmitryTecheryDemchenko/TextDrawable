@@ -1,193 +1,138 @@
-package com.amulyakhare.td.sample;
+package com.amulyakhare.td.sample
 
-import android.content.Intent;
-import android.graphics.Color;
-import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
+import android.app.Activity
+import android.content.Intent
+import android.graphics.Color
+import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.ImageView
+import android.widget.ListView
+import android.widget.TextView
+import com.amulyakhare.td.R
+import com.amulyakhare.td.sample.sample.DrawableProvider
+import com.amulyakhare.textdrawable.TextDrawable
+import com.amulyakhare.textdrawable.util.ColorGenerator
 
-import com.amulyakhare.td.R;
-import com.amulyakhare.td.sample.sample.DrawableProvider;
-import com.amulyakhare.textdrawable.TextDrawable;
-import com.amulyakhare.textdrawable.util.ColorGenerator;
-
-import java.util.Arrays;
-import java.util.List;
-
-public class ListActivity extends ActionBarActivity {
-
-    private static final int HIGHLIGHT_COLOR = 0x999be6ff;
-
+class ListActivity : Activity() {
     // list of data items
-    private List<ListData> mDataList = Arrays.asList(
-            new ListData("Iron Man"),
-            new ListData("Captain America"),
-            new ListData("James Bond"),
-            new ListData("Harry Potter"),
-            new ListData("Sherlock Holmes"),
-            new ListData("Black Widow"),
-            new ListData("Hawk Eye"),
-            new ListData("Iron Man"),
-            new ListData("Guava"),
-            new ListData("Tomato"),
-            new ListData("Pineapple"),
-            new ListData("Strawberry"),
-            new ListData("Watermelon"),
-            new ListData("Pears"),
-            new ListData("Kiwi"),
-            new ListData("Plums")
-    );
+    private val mDataList = listOf(
+            ListData("Iron Man"),
+            ListData("Captain America"),
+            ListData("James Bond"),
+            ListData("Harry Potter"),
+            ListData("Sherlock Holmes"),
+            ListData("Black Widow"),
+            ListData("Hawk Eye"),
+            ListData("Iron Man"),
+            ListData("Guava"),
+            ListData("Tomato"),
+            ListData("Pineapple"),
+            ListData("Strawberry"),
+            ListData("Watermelon"),
+            ListData("Pears"),
+            ListData("Kiwi"),
+            ListData("Plums")
+    )
 
     // declare the color generator and drawable builder
-    private ColorGenerator mColorGenerator = ColorGenerator.MATERIAL;
-    private TextDrawable.IBuilder mDrawableBuilder;
+    private val mColorGenerator: ColorGenerator = ColorGenerator.MATERIAL
+    private lateinit var mDrawableBuilder: TextDrawable.IBuilder
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list);
-
-        Intent intent = getIntent();
-        int type = intent.getIntExtra(MainActivity.TYPE, DrawableProvider.SAMPLE_RECT);
-
-        // initialize the builder based on the "TYPE"
-        switch (type) {
-            case DrawableProvider.SAMPLE_RECT:
-                mDrawableBuilder = TextDrawable.builder()
-                        .rect();
-                break;
-            case DrawableProvider.SAMPLE_ROUND_RECT:
-                mDrawableBuilder = TextDrawable.builder()
-                        .roundRect(10);
-                break;
-            case DrawableProvider.SAMPLE_ROUND:
-                mDrawableBuilder = TextDrawable.builder()
-                        .round();
-                break;
-            case DrawableProvider.SAMPLE_RECT_BORDER:
-                mDrawableBuilder = TextDrawable.builder()
-                        .beginConfig()
-                            .withBorder(4)
-                        .endConfig()
-                        .rect();
-                break;
-            case DrawableProvider.SAMPLE_ROUND_RECT_BORDER:
-                mDrawableBuilder = TextDrawable.builder()
-                        .beginConfig()
-                            .withBorder(4)
-                        .endConfig()
-                        .roundRect(10);
-                break;
-            case DrawableProvider.SAMPLE_ROUND_BORDER:
-                mDrawableBuilder = TextDrawable.builder()
-                        .beginConfig()
-                            .withBorder(4)
-                        .endConfig()
-                        .round();
-                break;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_list)
+        val intent: Intent = intent
+        val type: Int = intent.getIntExtra(MainActivity.TYPE, DrawableProvider.SAMPLE_RECT)
+        mDrawableBuilder = when (type) {
+            DrawableProvider.SAMPLE_RECT -> TextDrawable.builder()
+                    .rect()
+            DrawableProvider.SAMPLE_ROUND_RECT -> TextDrawable.builder()
+                    .roundRect(10)
+            DrawableProvider.SAMPLE_ROUND -> TextDrawable.builder()
+                    .round()
+            DrawableProvider.SAMPLE_RECT_BORDER -> TextDrawable.builder()
+                    .beginConfig()
+                    .withBorder(4)
+                    .endConfig()
+                    .rect()
+            DrawableProvider.SAMPLE_ROUND_RECT_BORDER -> TextDrawable.builder()
+                    .beginConfig()
+                    .withBorder(4)
+                    .endConfig()
+                    .roundRect(10)
+            DrawableProvider.SAMPLE_ROUND_BORDER -> TextDrawable.builder()
+                    .beginConfig()
+                    .withBorder(4)
+                    .endConfig()
+                    .round()
+            else -> throw Exception("Unknown type")
         }
 
         // init the list view and its adapter
-        ListView listView = (ListView) findViewById(R.id.listView);
-        listView.setAdapter(new SampleAdapter());
+        val listView = findViewById<ListView>(R.id.listView)
+        listView.adapter = SampleAdapter()
     }
 
-    private class SampleAdapter extends BaseAdapter {
-
-        @Override
-        public int getCount() {
-            return mDataList.size();
+    private inner class SampleAdapter : BaseAdapter() {
+        override fun getCount(): Int {
+            return mDataList.size
         }
 
-        @Override
-        public ListData getItem(int position) {
-            return mDataList.get(position);
+        override fun getItem(position: Int): ListData {
+            return mDataList[position]
         }
 
-        @Override
-        public long getItemId(int position) {
-            return position;
+        override fun getItemId(position: Int): Long {
+            return position.toLong()
         }
 
-        @Override
-        public View getView(final int position, View convertView, ViewGroup parent) {
-            final ViewHolder holder;
-            if (convertView == null) {
-                convertView = View.inflate(ListActivity.this, R.layout.list_item_layout, null);
-                holder = new ViewHolder(convertView);
-                convertView.setTag(holder);
-            } else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-
-            ListData item = getItem(position);
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val holder = (convertView?.tag as? ViewHolder) ?: ViewHolder(
+                    view = View.inflate(this@ListActivity, R.layout.list_item_layout, null)
+            )
+            holder.view.tag = holder
+            val item = getItem(position)
 
             // provide support for selected state
-            updateCheckedState(holder, item);
-            holder.imageView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    // when the image is clicked, update the selected state
-                    ListData data = getItem(position);
-                    data.setChecked(!data.isChecked);
-                    updateCheckedState(holder, data);
-                }
-            });
-            holder.textView.setText(item.data);
-
-            return convertView;
+            updateCheckedState(holder, item)
+            holder.imageView.setOnClickListener { // when the image is clicked, update the selected state
+                val data = getItem(position)
+                data.isChecked = !data.isChecked
+                updateCheckedState(holder, data)
+            }
+            holder.textView.text = item.data
+            return holder.view
         }
 
-        private void updateCheckedState(ViewHolder holder, ListData item) {
+        private fun updateCheckedState(holder: ViewHolder, item: ListData) {
             if (item.isChecked) {
-                holder.imageView.setImageDrawable(mDrawableBuilder.build(" ", 0xff616161));
-                holder.view.setBackgroundColor(HIGHLIGHT_COLOR);
-                holder.checkIcon.setVisibility(View.VISIBLE);
-            }
-            else {
-                TextDrawable drawable = mDrawableBuilder.build(String.valueOf(item.data.charAt(0)), mColorGenerator.getColor(item.data));
-                holder.imageView.setImageDrawable(drawable);
-                holder.view.setBackgroundColor(Color.TRANSPARENT);
-                holder.checkIcon.setVisibility(View.GONE);
+                holder.imageView.setImageDrawable(mDrawableBuilder.build(" ", -0x9e9e9f))
+                holder.view.setBackgroundColor(HIGHLIGHT_COLOR)
+                holder.checkIcon.visibility = View.VISIBLE
+            } else {
+                val drawable: TextDrawable = mDrawableBuilder.build(item.data[0].toString(), mColorGenerator.getColor(item.data))
+                holder.imageView.setImageDrawable(drawable)
+                holder.view.setBackgroundColor(Color.TRANSPARENT)
+                holder.checkIcon.visibility = View.GONE
             }
         }
     }
 
-    private static class ViewHolder {
+    private class ViewHolder(val view: View) {
+        val imageView: ImageView = view.findViewById(R.id.imageView)
+        val textView: TextView = view.findViewById(R.id.textView)
+        val checkIcon: ImageView = view.findViewById(R.id.check_icon)
 
-        private View view;
-
-        private ImageView imageView;
-
-        private TextView textView;
-
-        private ImageView checkIcon;
-
-        private ViewHolder(View view) {
-            this.view = view;
-            imageView = (ImageView) view.findViewById(R.id.imageView);
-            textView = (TextView) view.findViewById(R.id.textView);
-            checkIcon = (ImageView) view.findViewById(R.id.check_icon);
-        }
     }
 
-    private static class ListData {
+    private data class ListData(
+            val data: String,
+            var isChecked: Boolean = false,
+    )
 
-        private String data;
-
-        private boolean isChecked;
-
-        public ListData(String data) {
-            this.data = data;
-        }
-
-        public void setChecked(boolean isChecked) {
-            this.isChecked = isChecked;
-        }
+    companion object {
+        private const val HIGHLIGHT_COLOR = -0x66641901
     }
 }
